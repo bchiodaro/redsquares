@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draggable Green Squares</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: #1a1a1a;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        .square {
+            width: 80px;
+            height: 80px;
+            background: #ef4444;
+            position: absolute;
+            cursor: move;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: box-shadow 0.2s;
+            user-select: none;
+        }
+        .square:hover {
+            box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4);
+        }
+        .square.dragging {
+            box-shadow: 0 8px 16px rgba(239, 68, 68, 0.6);
+            opacity: 0.9;
+        }
+        .info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            font-size: 14px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">Drag the red squares around!</div>
+    <div class="square" id="square1"></div>
+    <div class="square" id="square2"></div>
+
+    <script>
+        const squares = document.querySelectorAll('.square');
+        let activeSquare = null;
+        let offset = { x: 0, y: 0 };
+
+        // Position squares initially
+        document.getElementById('square1').style.left = '100px';
+        document.getElementById('square1').style.top = '100px';
+        document.getElementById('square2').style.left = '250px';
+        document.getElementById('square2').style.top = '100px';
+
+        squares.forEach(square => {
+            square.addEventListener('mousedown', startDrag);
+            square.addEventListener('touchstart', startDrag, { passive: false });
+        });
+
+        function startDrag(e) {
+            e.preventDefault();
+            activeSquare = e.target;
+            activeSquare.classList.add('dragging');
+
+            const touch = e.type === 'touchstart' ? e.touches[0] : e;
+            const rect = activeSquare.getBoundingClientRect();
+            
+            offset.x = touch.clientX - rect.left;
+            offset.y = touch.clientY - rect.top;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        function drag(e) {
+            if (!activeSquare) return;
+            e.preventDefault();
+
+            const touch = e.type === 'touchmove' ? e.touches[0] : e;
+            
+            let x = touch.clientX - offset.x;
+            let y = touch.clientY - offset.y;
+
+            // Keep square within viewport
+            const maxX = window.innerWidth - activeSquare.offsetWidth;
+            const maxY = window.innerHeight - activeSquare.offsetHeight;
+            
+            x = Math.max(0, Math.min(x, maxX));
+            y = Math.max(0, Math.min(y, maxY));
+
+            activeSquare.style.left = x + 'px';
+            activeSquare.style.top = y + 'px';
+        }
+
+        function stopDrag() {
+            if (activeSquare) {
+                activeSquare.classList.remove('dragging');
+                activeSquare = null;
+            }
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('touchend', stopDrag);
+        }
+    </script>
+</body>
+</html>
